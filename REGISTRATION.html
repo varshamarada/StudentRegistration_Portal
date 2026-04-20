@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GCF Student Portal – Registration</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+  :root{--bg:#0A192F;--surface:#112240;--primary:#64FFDA;--secondary:#8892B0;--text:#CCD6F6;--accent:#1F6FEB;--danger:#FF6B6B;--warn:#FFD166;--r:10px;}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;position:relative;}
+  body::before{content:'';position:fixed;inset:0;z-index:0;background:radial-gradient(1px 1px at 20% 30%,rgba(100,255,218,.25),transparent),radial-gradient(1px 1px at 60% 10%,rgba(100,255,218,.2),transparent),radial-gradient(1px 1px at 80% 60%,rgba(31,111,235,.3),transparent),radial-gradient(1px 1px at 40% 80%,rgba(100,255,218,.15),transparent),radial-gradient(2px 2px at 75% 45%,rgba(31,111,235,.4),transparent);pointer-events:none;}
+
+  header{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(10,25,47,.94);backdrop-filter:blur(14px);border-bottom:1px solid rgba(100,255,218,.15);display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:60px;}
+  .logo{font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:800;color:var(--primary);letter-spacing:.12em;}
+  .logo span{color:var(--accent);}
+  #liveClock{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--secondary);text-align:right;line-height:1.5;}
+
+  .portal-wrap{display:flex;min-height:100vh;padding-top:60px;position:relative;z-index:1;}
+
+  aside{width:260px;flex-shrink:0;background:rgba(17,34,64,.8);backdrop-filter:blur(12px);border-right:1px solid rgba(100,255,218,.1);padding:2.5rem 1.5rem;position:sticky;top:60px;height:calc(100vh - 60px);overflow-y:auto;}
+  .aside-title{font-family:'Orbitron',monospace;font-size:.65rem;letter-spacing:.2em;color:var(--secondary);margin-bottom:2rem;text-transform:uppercase;}
+  .steps{display:flex;flex-direction:column;gap:0;}
+  .step-item{display:flex;align-items:flex-start;gap:.9rem;padding:.8rem 0;position:relative;}
+  .step-item:not(:last-child)::after{content:'';position:absolute;left:19px;top:calc(50% + 18px);width:2px;height:calc(100% - 10px);background:rgba(100,255,218,.15);}
+  .step-item.active::after,.step-item.done::after{background:rgba(100,255,218,.4);}
+  .bubble{width:38px;height:38px;border-radius:50%;border:2px solid rgba(100,255,218,.3);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:.75rem;font-weight:700;color:var(--secondary);flex-shrink:0;transition:all .4s ease;position:relative;z-index:1;background:var(--surface);}
+  .step-item.active .bubble{border-color:var(--primary);color:var(--primary);box-shadow:0 0 14px rgba(100,255,218,.35);}
+  .step-item.done .bubble{background:var(--primary);border-color:var(--primary);color:var(--bg);font-size:.9rem;}
+  .step-meta{flex:1;}
+  .step-name{font-size:.82rem;font-weight:600;color:var(--secondary);transition:color .3s;}
+  .step-item.active .step-name{color:var(--primary);}
+  .step-item.done .step-name{color:var(--text);}
+  .step-cap{font-size:.68rem;color:rgba(136,146,176,.6);margin-top:.1rem;line-height:1.3;}
+
+  main{flex:1;padding:2.5rem 2rem;display:flex;flex-direction:column;overflow:hidden;}
+  .slides-wrap{flex:1;overflow:hidden;position:relative;}
+  .slide{display:none;animation:slideIn .45s cubic-bezier(.22,1,.36,1);}
+  .slide.active{display:block;}
+  @keyframes slideIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+
+  .slide-hd{margin-bottom:2rem;}
+  .slide-hd h2{font-family:'Orbitron',monospace;font-size:1.4rem;font-weight:700;color:var(--primary);letter-spacing:.05em;}
+  .slide-hd p{color:var(--secondary);font-size:.85rem;margin-top:.4rem;}
+
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;}
+  .form-grid .full{grid-column:1/-1;}
+  .field{display:flex;flex-direction:column;gap:.45rem;}
+  .field label{font-size:.75rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--secondary);}
+  .field label span.req{color:var(--primary);margin-left:2px;}
+  .field input,.field select{background:rgba(17,34,64,.9);border:1px solid rgba(100,255,218,.2);border-radius:var(--r);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.9rem;padding:.75rem 1rem;outline:none;transition:border-color .25s,box-shadow .25s;width:100%;}
+  .field input:focus,.field select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(100,255,218,.1);}
+  .field .err-msg{font-size:.7rem;color:var(--danger);display:none;}
+  .field.has-error .err-msg{display:block;}
+  .field.has-error input,.field.has-error select{border-color:var(--danger);}
+  select option{background:#112240;}
+
+  .color-row{display:flex;gap:.8rem;align-items:center;}
+  .color-row input[type="color"]{width:48px;height:48px;padding:2px;border-radius:8px;cursor:pointer;background:rgba(17,34,64,.9);border:1px solid rgba(100,255,218,.2);flex-shrink:0;}
+  .color-label-val{font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--primary);}
+
+  .skills-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;}
+  .skill-chip{display:flex;align-items:center;gap:.5rem;background:rgba(17,34,64,.8);border:1px solid rgba(100,255,218,.15);border-radius:6px;padding:.45rem .7rem;cursor:pointer;transition:all .25s;font-size:.8rem;color:var(--secondary);user-select:none;}
+  .skill-chip input{display:none;}
+  .skill-chip:has(input:checked){border-color:var(--primary);color:var(--primary);background:rgba(100,255,218,.08);}
+  .skill-chip .dot{width:8px;height:8px;border-radius:50%;border:2px solid currentColor;flex-shrink:0;}
+  .skill-chip:has(input:checked) .dot{background:var(--primary);}
+
+  .pw-wrap{position:relative;}
+  .pw-wrap input{padding-right:2.8rem;}
+  .eye-btn{position:absolute;right:.8rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--secondary);font-size:1rem;transition:color .2s;}
+  .eye-btn:hover{color:var(--primary);}
+  .strength-bar{height:4px;border-radius:2px;margin-top:.4rem;background:rgba(100,255,218,.1);overflow:hidden;}
+  .strength-fill{height:100%;border-radius:2px;width:0;transition:width .4s ease,background .4s;}
+  .strength-label{font-size:.68rem;color:var(--secondary);margin-top:.25rem;}
+
+  .quiz-card{background:rgba(17,34,64,.8);border:1px solid rgba(100,255,218,.2);border-radius:var(--r);padding:2rem;text-align:center;max-width:520px;}
+  .quiz-eq{font-family:'Orbitron',monospace;font-size:2.2rem;color:var(--primary);margin-bottom:1.5rem;letter-spacing:.08em;}
+  .quiz-opts{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1.5rem;}
+  .quiz-btn{padding:.9rem 1.2rem;border-radius:8px;border:2px solid rgba(100,255,218,.2);background:rgba(10,25,47,.6);color:var(--text);font-size:.95rem;cursor:pointer;transition:all .25s;font-family:'DM Sans',sans-serif;}
+  .quiz-btn:hover{border-color:var(--primary);color:var(--primary);}
+  .quiz-btn.correct{border-color:#06d6a0;background:rgba(6,214,160,.15);color:#06d6a0;}
+  .quiz-btn.wrong{border-color:var(--danger);background:rgba(255,107,107,.1);color:var(--danger);}
+  .quiz-feedback{font-size:.85rem;min-height:1.2rem;}
+  .quiz-score-display{font-family:'JetBrains Mono',monospace;font-size:.85rem;color:var(--secondary);margin-top:1rem;}
+  .quiz-progress{margin-top:.8rem;display:flex;gap:.4rem;justify-content:center;}
+  .qp-dot{width:8px;height:8px;border-radius:50%;background:rgba(100,255,218,.2);transition:background .3s;}
+  .qp-dot.done-q{background:var(--primary);}
+  .qp-dot.wrong-q{background:var(--danger);}
+
+  .nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid rgba(100,255,218,.1);}
+  .btn{padding:.75rem 2rem;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .3s;border:none;display:inline-flex;align-items:center;gap:.5rem;}
+  .btn-ghost{background:transparent;border:1px solid rgba(100,255,218,.25);color:var(--secondary);}
+  .btn-ghost:hover{border-color:var(--primary);color:var(--primary);}
+  .btn-primary{background:linear-gradient(135deg,var(--accent),#0a84ff);color:#fff;box-shadow:0 4px 20px rgba(31,111,235,.35);}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(31,111,235,.5);}
+  .btn-success{background:linear-gradient(135deg,#06d6a0,var(--primary));color:var(--bg);box-shadow:0 4px 20px rgba(100,255,218,.3);}
+  .btn-success:hover{transform:translateY(-2px);}
+  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+
+  .id-wrap{display:flex;gap:2rem;flex-wrap:wrap;align-items:flex-start;}
+  #idCard{background:linear-gradient(145deg,#112240,#0d1f3c);border:1px solid rgba(100,255,218,.35);border-radius:16px;padding:2rem 2rem 1.6rem;width:340px;flex-shrink:0;position:relative;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 0 1px rgba(100,255,218,.08) inset;}
+  #idCard::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--accent),var(--primary));}
+  #idCard::after{content:'GCF';position:absolute;bottom:1rem;right:1.5rem;font-family:'Orbitron',monospace;font-size:4rem;font-weight:800;color:rgba(100,255,218,.04);letter-spacing:.1em;}
+  .id-logo{font-family:'Orbitron',monospace;font-size:.7rem;letter-spacing:.25em;color:var(--secondary);margin-bottom:.5rem;}
+  .id-name{font-family:'Orbitron',monospace;font-size:1.25rem;font-weight:700;color:var(--primary);margin-bottom:.25rem;line-height:1.2;}
+  .id-dept{font-size:.78rem;color:var(--accent);margin-bottom:1.4rem;}
+  .id-divider{height:1px;background:rgba(100,255,218,.12);margin:1rem 0;}
+  .id-row{display:flex;justify-content:space-between;font-size:.74rem;margin:.45rem 0;}
+  .id-row .k{color:var(--secondary);}
+  .id-row .v{color:var(--text);font-weight:500;font-family:'JetBrains Mono',monospace;font-size:.72rem;text-align:right;max-width:180px;line-height:1.4;}
+  .id-regid{margin-top:1.2rem;background:rgba(100,255,218,.07);border:1px solid rgba(100,255,218,.2);border-radius:8px;padding:.6rem 1rem;font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--primary);letter-spacing:.05em;text-align:center;}
+  .color-swatch{display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:middle;margin-right:4px;border:1px solid rgba(255,255,255,.2);}
+  .id-actions{display:flex;flex-direction:column;gap:.8rem;margin-top:1.5rem;}
+
+  .done-icon{width:72px;height:72px;border-radius:50%;background:rgba(100,255,218,.12);border:3px solid var(--primary);display:flex;align-items:center;justify-content:center;font-size:2rem;margin-bottom:1.5rem;animation:popIn .6s cubic-bezier(.22,1,.36,1);}
+  @keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+  .confetti-line{font-size:.85rem;color:var(--secondary);margin-bottom:2rem;}
+
+  ::-webkit-scrollbar{width:5px;}
+  ::-webkit-scrollbar-track{background:rgba(17,34,64,.5);}
+  ::-webkit-scrollbar-thumb{background:rgba(100,255,218,.2);border-radius:10px;}
+
+  /* ══════════ POPUP MODAL ══════════ */
+  .modal-backdrop{position:fixed;inset:0;z-index:9999;background:rgba(4,10,22,.82);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s ease;}
+  .modal-backdrop.show{opacity:1;pointer-events:all;}
+  .modal-box{background:linear-gradient(150deg,#0f1f3d,#0c1829);border:1px solid rgba(100,255,218,.18);border-radius:22px;padding:0 0 2.2rem;width:min(480px,92vw);box-shadow:0 40px 120px rgba(0,0,0,.75),0 0 0 1px rgba(100,255,218,.04) inset;transform:scale(.84) translateY(28px);transition:transform .4s cubic-bezier(.22,1,.36,1);text-align:center;position:relative;overflow:hidden;}
+  .modal-backdrop.show .modal-box{transform:scale(1) translateY(0);}
+
+  /* top colour stripe */
+  .modal-stripe{height:5px;width:100%;}
+  .ms-success{background:linear-gradient(90deg,#06d6a0,#64FFDA);}
+  .ms-error  {background:linear-gradient(90deg,#FF6B6B,#ff4444);}
+  .ms-warning{background:linear-gradient(90deg,#FFD166,#ff9a3c);}
+  .ms-info   {background:linear-gradient(90deg,#1F6FEB,#64FFDA);}
+  .ms-blocked{background:linear-gradient(90deg,#b91c1c,#FF6B6B);}
+
+  .modal-inner{padding:2.4rem 2.4rem 0;}
+
+  .modal-icon-wrap{width:76px;height:76px;border-radius:50%;margin:0 auto 1.4rem;display:flex;align-items:center;justify-content:center;font-size:2rem;}
+  .mi-success{background:rgba(6,214,160,.1);border:2.5px solid #06d6a0;}
+  .mi-error  {background:rgba(255,107,107,.1);border:2.5px solid #FF6B6B;}
+  .mi-warning{background:rgba(255,209,102,.1);border:2.5px solid #FFD166;}
+  .mi-info   {background:rgba(31,111,235,.1);border:2.5px solid #1F6FEB;}
+  .mi-blocked{background:rgba(185,28,28,.15);border:2.5px solid #FF6B6B;}
+
+  .modal-title{font-family:'Orbitron',monospace;font-size:1.05rem;font-weight:700;margin-bottom:.75rem;letter-spacing:.04em;}
+  .mt-success{color:#06d6a0;} .mt-error{color:#FF6B6B;} .mt-warning{color:#FFD166;} .mt-info{color:#64FFDA;} .mt-blocked{color:#FF6B6B;}
+
+  .modal-body{font-size:.88rem;color:var(--secondary);line-height:1.75;margin-bottom:2rem;padding:0 .4rem;}
+  .modal-body strong{color:var(--text);}
+  .age-badge{display:inline-block;background:rgba(255,107,107,.15);border:1px solid rgba(255,107,107,.4);border-radius:6px;padding:.1rem .55rem;font-family:'JetBrains Mono',monospace;font-size:.92rem;color:#FF6B6B;font-weight:700;margin:0 2px;}
+
+  .modal-actions{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;padding:0 2rem;}
+  .m-btn{padding:.7rem 1.9rem;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;border:none;transition:all .28s;}
+  .mb-ok   {background:linear-gradient(135deg,#1F6FEB,#0a84ff);color:#fff;box-shadow:0 4px 18px rgba(31,111,235,.4);}
+  .mb-ok:hover{transform:translateY(-2px);box-shadow:0 7px 26px rgba(31,111,235,.55);}
+  .mb-green{background:linear-gradient(135deg,#06d6a0,#64FFDA);color:#0A192F;box-shadow:0 4px 18px rgba(100,255,218,.3);}
+  .mb-green:hover{transform:translateY(-2px);}
+  .mb-red  {background:linear-gradient(135deg,#FF6B6B,#e53e3e);color:#fff;box-shadow:0 4px 18px rgba(255,107,107,.35);}
+  .mb-red:hover{transform:translateY(-2px);}
+  .mb-ghost{background:transparent;border:1px solid rgba(100,255,218,.22);color:var(--secondary);}
+  .mb-ghost:hover{border-color:var(--primary);color:var(--primary);}
+
+  /* confetti */
+  .modal-confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:22px;}
+  .cdot{position:absolute;width:7px;height:7px;border-radius:50%;opacity:0;}
+  @keyframes cfall{0%{transform:translateY(-20px) scale(1);opacity:1}100%{transform:translateY(320px) rotate(540deg) scale(.5);opacity:0}}
+
+  /* shake */
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+  .shake{animation:shake .45s ease;}
+
+  @media(max-width:768px){aside{display:none;}.form-grid{grid-template-columns:1fr;}.skills-grid{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+
+<!-- ══ MODAL ══ -->
+<div class="modal-backdrop" id="modalBd">
+  <div class="modal-box" id="modalBox">
+    <div class="modal-stripe" id="mStripe"></div>
+    <div class="modal-confetti" id="mConfetti"></div>
+    <div class="modal-inner">
+      <div class="modal-icon-wrap" id="mIcon"></div>
+      <div class="modal-title"     id="mTitle"></div>
+      <div class="modal-body"      id="mBody"></div>
+    </div>
+    <div class="modal-actions" id="mActions"></div>
+  </div>
+</div>
+<div id="cursor-dot"></div>
+<div id="cursor-outline"></div>
+
+<style>
+  /* Hide actual cursor on desktop */
+  @media (min-width: 769px) {
+    * { cursor: none !important; }
+  }
+
+  #cursor-dot, #cursor-outline {
+    pointer-events: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    border-radius: 50%;
+    z-index: 99999;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-out;
+  }
+
+  #cursor-dot {
+    width: 6px;
+    height: 6px;
+    background-color: var(--primary);
+    box-shadow: 0 0 10px var(--primary);
+  }
+
+  #cursor-outline {
+    width: 34px;
+    height: 34px;
+    border: 1.5px solid var(--primary);
+    transition: transform 0.15s ease-out; /* Slight lag for the ring */
+  }
+
+  /* Hover Effect: Ring expands and dot glows brighter */
+  .cursor-hover {
+    transform: scale(1.8);
+    background-color: rgba(100, 255, 218, 0.1);
+    border-color: var(--accent) !important;
+  }
+</style>
+
+<script>
+  const dot = document.getElementById('cursor-dot');
+  const outline = document.getElementById('cursor-outline');
+
+  window.addEventListener('mousemove', (e) => {
+    const { clientX: x, clientY: y } = e;
+    
+    // Make visible on first move
+    dot.style.opacity = "1";
+    outline.style.opacity = "1";
+
+    // Position the dot instantly
+    dot.style.transform = `translate(${x - 3}px, ${y - 3}px)`;
+    
+    // Position the outline (centered)
+    outline.style.transform = `translate(${x - 17}px, ${y - 17}px)`;
+  });
+
+  // Hover animations for buttons, inputs, and chips
+  const interactiveElements = 'button, a, input, select, .skill-chip, .step-item';
+  document.querySelectorAll(interactiveElements).forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      outline.classList.add('cursor-hover');
+      dot.style.transform += ' scale(0.5)';
+    });
+    el.addEventListener('mouseleave', () => {
+      outline.classList.remove('cursor-hover');
+    });
+  });
+
+  // Hide cursor when leaving window
+  document.addEventListener('mouseleave', () => {
+    dot.style.opacity = "0";
+    outline.style.opacity = "0";
+  });
+</script>
+<header>
+  <div class="logo">GCF<span>·</span>STUDENT PORTAL</div>
+  <div id="liveClock"></div>
+</header>
+
+<div class="portal-wrap">
+  <aside>
+    <div class="aside-title">Registration Steps</div>
+    <div class="steps">
+      <div class="step-item active" data-step="0">
+        <div class="bubble" id="b0">1</div>
+        <div class="step-meta"><div class="step-name">Personal Info</div><div class="step-cap">Name, email &amp; age</div></div>
+      </div>
+      <div class="step-item" data-step="1">
+        <div class="bubble" id="b1">2</div>
+        <div class="step-meta"><div class="step-name">Academic Info</div><div class="step-cap">Department, roll &amp; year</div></div>
+      </div>
+      <div class="step-item" data-step="2">
+        <div class="bubble" id="b2">3</div>
+        <div class="step-meta"><div class="step-name">Create Password</div><div class="step-cap">Secure your account</div></div>
+      </div>
+      <div class="step-item" data-step="3">
+        <div class="bubble" id="b3">4</div>
+        <div class="step-meta"><div class="step-name">Math Quiz</div><div class="step-cap">Prove you're human</div></div>
+      </div>
+      <div class="step-item" data-step="4">
+        <div class="bubble" id="b4">5</div>
+        <div class="step-meta"><div class="step-name">All Done</div><div class="step-cap">Your student ID</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="slides-wrap">
+
+      <!-- SLIDE 1 -->
+      <div class="slide active" id="slide-0">
+        <div class="slide-hd">
+          <h2>Personal Info</h2>
+          <p>Tell us about yourself — fields marked <span style="color:var(--primary)">*</span> are required.</p>
+        </div>
+        <div class="form-grid">
+          <div class="field full" id="f-fullname">
+            <label>Full Name <span class="req">*</span></label>
+            <input type="text" id="fullname" placeholder="e.g. Arjun Mehta"/>
+            <span class="err-msg">Please enter your full name.</span>
+          </div>
+          <div class="field" id="f-email">
+            <label>Email Address <span class="req">*</span></label>
+            <input type="email" id="email" placeholder="student@gcf.edu"/>
+            <span class="err-msg">Enter a valid email address.</span>
+          </div>
+          <div class="field" id="f-age">
+            <label>Age <span class="req">*</span> <span style="font-size:.65rem;color:var(--secondary)">(16–60)</span></label>
+            <input type="number" id="age" placeholder="Enter your age" min="1" max="120"/>
+            <span class="err-msg" id="age-err-msg">Age must be between 16 and 60.</span>
+          </div>
+          <div class="field" id="f-blood">
+            <label>Blood Group <span class="req">*</span></label>
+            <select id="blood">
+              <option value="">— Select —</option>
+              <option>A+</option><option>A−</option><option>B+</option><option>B−</option>
+              <option>O+</option><option>O−</option><option>AB+</option><option>AB−</option>
+            </select>
+            <span class="err-msg">Please select your blood group.</span>
+          </div>
+          <div class="field full" id="f-color">
+            <label>Favorite Color <span class="req">*</span></label>
+            <div class="color-row">
+              <input type="color" id="favcolor" value="#64FFDA"/>
+              <div>
+                <div style="font-size:.78rem;color:var(--secondary);margin-bottom:.2rem">Selected:</div>
+                <div class="color-label-val" id="colorVal">#64FFDA</div>
+              </div>
+            </div>
+          </div>
+          <div class="field full" id="f-skills">
+            <label>Skills <span class="req">*</span> <span style="font-size:.65rem;color:var(--secondary)">(pick at least one)</span></label>
+            <div class="skills-grid">
+              <label class="skill-chip"><input type="checkbox" value="Python" class="skill-cb"><span class="dot"></span>Python</label>
+              <label class="skill-chip"><input type="checkbox" value="Java" class="skill-cb"><span class="dot"></span>Java</label>
+              <label class="skill-chip"><input type="checkbox" value="Web Dev" class="skill-cb"><span class="dot"></span>Web Dev</label>
+              <label class="skill-chip"><input type="checkbox" value="Machine Learning" class="skill-cb"><span class="dot"></span>Machine Learning</label>
+              <label class="skill-chip"><input type="checkbox" value="Data Science" class="skill-cb"><span class="dot"></span>Data Science</label>
+              <label class="skill-chip"><input type="checkbox" value="Cybersecurity" class="skill-cb"><span class="dot"></span>Cybersecurity</label>
+              <label class="skill-chip"><input type="checkbox" value="Cloud Computing" class="skill-cb"><span class="dot"></span>Cloud Computing</label>
+              <label class="skill-chip"><input type="checkbox" value="UI/UX Design" class="skill-cb"><span class="dot"></span>UI/UX Design</label>
+              <label class="skill-chip"><input type="checkbox" value="Networking" class="skill-cb"><span class="dot"></span>Networking</label>
+            </div>
+            <span class="err-msg" id="skills-err">Please select at least one skill.</span>
+          </div>
+        </div>
+        <nav class="nav-row">
+          <div></div>
+          <button class="btn btn-primary" onclick="goNext(0)">Next →</button>
+        </nav>
+      </div>
+
+      <!-- SLIDE 2 -->
+      <div class="slide" id="slide-1">
+        <div class="slide-hd">
+          <h2>Academic Info</h2>
+          <p>Your enrollment and department details.</p>
+        </div>
+        <div class="form-grid">
+          <div class="field" id="f-dept">
+            <label>Department <span class="req">*</span></label>
+            <select id="dept">
+              <option value="">— Select —</option>
+              <option>Computer Science</option><option>Information Technology</option>
+              <option>Electronics &amp; Communication</option><option>Mechanical Engineering</option>
+              <option>Civil Engineering</option><option>Electrical Engineering</option>
+              <option>Biotechnology</option><option>Business Administration</option>
+            </select>
+            <span class="err-msg">Please select your department.</span>
+          </div>
+          <div class="field" id="f-year">
+            <label>Year of Study <span class="req">*</span></label>
+            <select id="year">
+              <option value="">— Select —</option>
+              <option>1st Year</option><option>2nd Year</option><option>3rd Year</option>
+              <option>4th Year</option><option>5th Year</option>
+            </select>
+            <span class="err-msg">Please select your year.</span>
+          </div>
+          <div class="field" id="f-roll">
+            <label>Roll Number <span class="req">*</span></label>
+            <input type="text" id="roll" placeholder="e.g. CS2024001"/>
+            <span class="err-msg">Please enter your roll number.</span>
+          </div>
+          <div class="field" id="f-phone">
+            <label>Phone Number</label>
+            <input type="tel" id="phone" placeholder="+91 00000 00000"/>
+          </div>
+          <div class="field" id="f-gender">
+            <label>Gender <span class="req">*</span></label>
+            <select id="gender">
+              <option value="">— Select —</option>
+              <option>Male</option><option>Female</option>
+              <option>Non-binary</option><option>Prefer not to say</option>
+            </select>
+            <span class="err-msg">Please select gender.</span>
+          </div>
+          <div class="field" id="f-dob">
+            <label>Date of Birth <span class="req">*</span></label>
+            <input type="date" id="dob"/>
+            <span class="err-msg">Please enter your date of birth.</span>
+          </div>
+        </div>
+        <nav class="nav-row">
+          <button class="btn btn-ghost" onclick="goPrev(1)">← Back</button>
+          <button class="btn btn-primary" onclick="goNext(1)">Next →</button>
+        </nav>
+      </div>
+
+      <!-- SLIDE 3 -->
+      <div class="slide" id="slide-2">
+        <div class="slide-hd">
+          <h2>Create Password</h2>
+          <p>Set a secure password to protect your GCF account.</p>
+        </div>
+        <div class="form-grid">
+          <div class="field full" id="f-pw">
+            <label>Password <span class="req">*</span></label>
+            <div class="pw-wrap">
+              <input type="password" id="pw" placeholder="At least 8 characters"/>
+              <button class="eye-btn" onclick="toggleEye('pw')">👁</button>
+            </div>
+            <div class="strength-bar"><div class="strength-fill" id="sf"></div></div>
+            <div class="strength-label" id="sl">Enter a password to check strength</div>
+            <span class="err-msg">Password must be at least 8 characters.</span>
+          </div>
+          <div class="field full" id="f-pwc">
+            <label>Confirm Password <span class="req">*</span></label>
+            <div class="pw-wrap">
+              <input type="password" id="pwc" placeholder="Re-enter password"/>
+              <button class="eye-btn" onclick="toggleEye('pwc')">👁</button>
+            </div>
+            <span class="err-msg">Passwords do not match.</span>
+          </div>
+          <div class="field full" style="background:rgba(100,255,218,.05);border:1px solid rgba(100,255,218,.15);border-radius:10px;padding:1rem;">
+            <div style="font-size:.78rem;color:var(--secondary);margin-bottom:.6rem;font-weight:600;">PASSWORD REQUIREMENTS</div>
+            <div style="display:flex;flex-direction:column;gap:.35rem;font-size:.82rem;color:var(--secondary);">
+              <div id="req-len">⬜ Minimum 8 characters</div>
+              <div id="req-upper">⬜ One uppercase letter</div>
+              <div id="req-num">⬜ One number</div>
+              <div id="req-sym">⬜ One special character (!@#$…)</div>
+            </div>
+          </div>
+        </div>
+        <nav class="nav-row">
+          <button class="btn btn-ghost" onclick="goPrev(2)">← Back</button>
+          <button class="btn btn-primary" onclick="goNext(2)">Next →</button>
+        </nav>
+      </div>
+
+      <!-- SLIDE 4 -->
+      <div class="slide" id="slide-3">
+        <div class="slide-hd">
+          <h2>Math Quiz</h2>
+          <p>Answer 3 questions. You need at least 2 correct to proceed.</p>
+        </div>
+        <div class="quiz-card">
+          <div class="quiz-eq" id="quizEq">Loading…</div>
+          <div class="quiz-opts" id="quizOpts"></div>
+          <div class="quiz-feedback" id="quizFb"></div>
+          <div class="quiz-score-display" id="quizScoreDisp"></div>
+          <div class="quiz-progress" id="quizProg"></div>
+        </div>
+        <div id="quizResult" style="display:none;margin-top:1.5rem;font-size:.9rem;color:var(--secondary);"></div>
+        <nav class="nav-row">
+          <button class="btn btn-ghost" onclick="goPrev(3)">← Back</button>
+          <button class="btn btn-success" id="quizNextBtn" disabled onclick="goNext(3)">Complete Registration →</button>
+        </nav>
+      </div>
+
+      <!-- SLIDE 5 -->
+      <div class="slide" id="slide-4">
+        <div class="slide-hd">
+          <div class="done-icon">🎓</div>
+          <h2>Registration Complete!</h2>
+          <p class="confetti-line">Welcome to GCF Student Portal. Your student ID has been generated.</p>
+        </div>
+        <div class="id-wrap">
+          <div id="idCard">
+            <div class="id-logo">GLOBAL COLLEGE FEDERATION</div>
+            <div class="id-name" id="ic-name">—</div>
+            <div class="id-dept" id="ic-dept">—</div>
+            <div class="id-divider"></div>
+            <div class="id-row"><span class="k">EMAIL</span><span class="v" id="ic-email">—</span></div>
+            <div class="id-row"><span class="k">YEAR</span><span class="v" id="ic-year">—</span></div>
+            <div class="id-row"><span class="k">ROLL NO.</span><span class="v" id="ic-roll">—</span></div>
+            <div class="id-row"><span class="k">QUIZ SCORE</span><span class="v" id="ic-score">—</span></div>
+            <div class="id-row"><span class="k">FAV. COLOR</span><span class="v" id="ic-color">—</span></div>
+            <div class="id-row"><span class="k">SKILLS</span><span class="v" id="ic-skills" style="text-align:right;line-height:1.5">—</span></div>
+            <div class="id-divider"></div>
+            <div class="id-regid" id="ic-regid">REG-——————</div>
+          </div>
+          <div class="id-actions">
+            <button class="btn btn-ghost" onclick="printCard()">🖨 Print ID Card</button>
+            <button class="btn btn-primary" onclick="resetForm()">➕ Register Another Student</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+// ── CLOCK ──────────────────────────────────
+function updateClock(){
+  const n=new Date();
+  document.getElementById('liveClock').innerHTML=
+    n.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})+
+    '<br><span style="font-size:.65rem">'+n.toLocaleDateString([],{weekday:'short',year:'numeric',month:'short',day:'numeric'})+'</span>';
+}
+updateClock(); setInterval(updateClock,1000);
+
+// ── STEPPER ────────────────────────────────
+let currentStep=0;
+function updateStepper(n){
+  document.querySelectorAll('.step-item').forEach((el,i)=>{
+    el.classList.remove('active','done');
+    const b=el.querySelector('.bubble');
+    if(i<n){el.classList.add('done');b.innerHTML='✓';}
+    else if(i===n){el.classList.add('active');b.innerHTML=i+1;}
+    else b.innerHTML=i+1;
+  });
+}
+function showSlide(n){
+  document.querySelectorAll('.slide').forEach(s=>s.classList.remove('active'));
+  document.getElementById('slide-'+n).classList.add('active');
+  currentStep=n; updateStepper(n);
+}
+
+// ── MODAL ENGINE ───────────────────────────
+function modal({type,icon,title,body,buttons,confetti}){
+  const typeMap={success:'success',error:'error',warning:'warning',info:'info',blocked:'blocked'};
+  const t=typeMap[type]||'info';
+
+  document.getElementById('mStripe').className='modal-stripe ms-'+t;
+  const iw=document.getElementById('mIcon');
+  iw.className='modal-icon-wrap mi-'+t; iw.textContent=icon;
+  const ttl=document.getElementById('mTitle');
+  ttl.className='modal-title mt-'+t; ttl.textContent=title;
+  document.getElementById('mBody').innerHTML=body;
+
+  // confetti
+  const conf=document.getElementById('mConfetti'); conf.innerHTML='';
+  if(confetti){
+    const cols=['#64FFDA','#1F6FEB','#FFD166','#06d6a0','#CCD6F6'];
+    for(let i=0;i<26;i++){
+      const d=document.createElement('div'); d.className='cdot';
+      d.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*30}%;background:${cols[i%cols.length]};animation:cfall ${1+Math.random()*1.5}s ease ${Math.random()*.7}s forwards;`;
+      conf.appendChild(d);
+    }
+  }
+
+  const acts=document.getElementById('mActions'); acts.innerHTML='';
+  (buttons||[{label:'OK',cls:'mb-ok',cb:null}]).forEach(b=>{
+    const btn=document.createElement('button');
+    btn.className='m-btn '+b.cls;
+    btn.textContent=b.label;
+    btn.onclick=()=>{ closeModal(); if(b.cb) setTimeout(b.cb,120); };
+    acts.appendChild(btn);
+  });
+
+  document.getElementById('modalBd').classList.add('show');
+}
+
+function closeModal(){ document.getElementById('modalBd').classList.remove('show'); }
+document.getElementById('modalBd').addEventListener('click',function(e){ if(e.target===this)closeModal(); });
+
+// ── STEP INTRO DATA ────────────────────────
+const INTROS=[
+  {type:'info',icon:'📋',title:'Step 1 — Personal Info',
+   body:'Please fill in your <strong>Full Name, Email, Age, Blood Group, Favourite Colour</strong> and at least one <strong>Skill</strong>.<br><br>⚠️ You must be <strong>between 16 and 60 years old</strong> to register. Students under 16 will be blocked.'},
+  {type:'info',icon:'🎓',title:'Step 2 — Academic Info',
+   body:'Provide your <strong>Department, Year of Study, Roll Number, Gender</strong> and <strong>Date of Birth</strong>.<br><br>Ensure your roll number matches your college-issued records.'},
+  {type:'info',icon:'🔐',title:'Step 3 — Create Password',
+   body:'Choose a <strong>strong password</strong> for your GCF account.<br><br>Requirements: <strong>8+ characters</strong>, one <strong>uppercase letter</strong>, one <strong>number</strong>, one <strong>special character</strong>.'},
+  {type:'info',icon:'🧮',title:'Step 4 — Math Quiz',
+   body:'Answer <strong>3 simple math questions</strong>. You need <strong>at least 2 correct</strong> answers to proceed.<br><br>Each question auto-advances after you select an answer. Take your time!'}
+];
+
+function showIntro(step){
+  if(step>=INTROS.length) return;
+  const d=INTROS[step];
+  modal({type:d.type,icon:d.icon,title:d.title,body:d.body,
+    buttons:[{label:"Let's Go →",cls:'mb-ok',cb:null}]});
+}
+
+// ── AGE LIVE CHECK ─────────────────────────
+document.getElementById('age').addEventListener('blur',function(){
+  const v=parseInt(this.value);
+  if(!this.value||isNaN(v)) return;
+  if(v<16){
+    this.classList.add('shake');
+    this.addEventListener('animationend',()=>this.classList.remove('shake'),{once:true});
+    modal({type:'blocked',icon:'🚫',title:'Access Denied — Under Age',
+      body:`You entered age <span class="age-badge">${v}</span>.<br><br>GCF Student Portal requires students to be <strong>at least 16 years old</strong>.<br><br>Students under 16 are <strong>not permitted</strong> to register. Please contact your institution if you have questions.`,
+      buttons:[{label:'I Understand',cls:'mb-red',cb:()=>{
+        document.getElementById('age').value='';
+        document.getElementById('age').focus();
+      }}]
+    });
+  } else if(v>60){
+    modal({type:'warning',icon:'⚠️',title:'Age Out of Range',
+      body:`You entered age <span class="age-badge">${v}</span>.<br><br>The maximum permitted age is <strong>60 years</strong>. Please enter a valid age between 16 and 60.`,
+      buttons:[{label:'Fix My Age',cls:'mb-ok',cb:()=>{
+        document.getElementById('age').value='';
+        document.getElementById('age').focus();
+      }}]
+    });
+  }
+});
+
+// ── VALIDATORS ─────────────────────────────
+function setErr(id,hasErr){
+  const el=document.getElementById('f-'+id);
+  if(el) el.classList.toggle('has-error',hasErr);
+}
+
+function validateSlide(step){
+  let ok=true;
+
+  if(step===0){
+    const name=document.getElementById('fullname').value.trim();
+    const email=document.getElementById('email').value.trim();
+    const age=parseInt(document.getElementById('age').value);
+    const blood=document.getElementById('blood').value;
+    const skills=[...document.querySelectorAll('.skill-cb:checked')];
+
+    if(!name){setErr('fullname',true);ok=false;}else setErr('fullname',false);
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){setErr('email',true);ok=false;}else setErr('email',false);
+
+    // Age — hard block
+    const rawAge=document.getElementById('age').value;
+    if(!rawAge||isNaN(age)||age<16||age>60){
+      setErr('age',true);
+      const msg=document.getElementById('age-err-msg');
+      msg.textContent=(age&&age<16)?'❌ You must be at least 16 to register.':'Age must be between 16 and 60.';
+      ok=false;
+      if(rawAge && age<16){
+        const el=document.getElementById('age');
+        el.classList.add('shake');
+        el.addEventListener('animationend',()=>el.classList.remove('shake'),{once:true});
+        modal({type:'blocked',icon:'🚫',title:'Registration Blocked',
+          body:`Age <span class="age-badge">${age}</span> does not meet the minimum requirement.<br><br><strong>You must be at least 16 years old</strong> to register on the GCF Student Portal.<br><br>This portal is accessible to students aged 16–60 only.`,
+          buttons:[{label:'Fix My Age',cls:'mb-red',cb:()=>{
+            document.getElementById('age').value='';
+            document.getElementById('age').focus();
+          }}]
+        });
+        return false;
+      }
+    } else setErr('age',false);
+
+    if(!blood){setErr('blood',true);ok=false;}else setErr('blood',false);
+
+    if(skills.length===0){
+      document.getElementById('f-skills').classList.add('has-error');
+      document.getElementById('skills-err').style.display='block';
+      ok=false;
+    } else {
+      document.getElementById('f-skills').classList.remove('has-error');
+      document.getElementById('skills-err').style.display='none';
+    }
+  }
+
+  if(step===1){
+    const dept=document.getElementById('dept').value;
+    const year=document.getElementById('year').value;
+    const roll=document.getElementById('roll').value.trim();
+    const gender=document.getElementById('gender').value;
+    const dob=document.getElementById('dob').value;
+    if(!dept){setErr('dept',true);ok=false;}else setErr('dept',false);
+    if(!year){setErr('year',true);ok=false;}else setErr('year',false);
+    if(!roll){setErr('roll',true);ok=false;}else setErr('roll',false);
+    if(!gender){setErr('gender',true);ok=false;}else setErr('gender',false);
+    if(!dob){setErr('dob',true);ok=false;}else setErr('dob',false);
+  }
+
+  if(step===2){
+    const pw=document.getElementById('pw').value;
+    const pc=document.getElementById('pwc').value;
+    if(pw.length<8){setErr('pw',true);ok=false;}else setErr('pw',false);
+    if(pw!==pc){setErr('pwc',true);ok=false;}else setErr('pwc',false);
+  }
+
+  if(step===3){ if(!quizPassed) ok=false; }
+
+  return ok;
+}
+
+// ── NAVIGATION ─────────────────────────────
+function goPrev(from){ showSlide(from-1); }
+
+// Step-complete messages
+function completionMsg(step){
+  const name=document.getElementById('fullname').value.trim();
+  const dept=document.getElementById('dept').value;
+  const year=document.getElementById('year').value;
+  if(step===0) return `<strong>${name}</strong>, your personal details have been saved successfully.<br><br>Moving on to your academic information…`;
+  if(step===1) return `Department: <strong>${dept}</strong><br>Year: <strong>${year}</strong><br><br>Academic info saved! Now let's secure your account.`;
+  if(step===2) return `Your password has been configured.<br><br>One final step — complete the <strong>Math Quiz</strong> to verify you're human!`;
+  if(step===3) return `You scored <strong>${quizScore}/3</strong> on the quiz. 🎉<br><br>Your registration is complete and your <strong>Student ID has been generated</strong>!`;
+  return '';
+}
+
+function goNext(from){
+  if(!validateSlide(from)) return;
+
+  const icons=['✅','🎓','🔐','🏆'];
+  const titles=['Personal Info Saved!','Academic Info Saved!','Password Created!','Quiz Complete!'];
+  const nextLabels=['Continue to Academic Info →','Continue to Password →','Start Math Quiz →','View My Student ID 🎉'];
+  const isLast=from===3;
+
+  modal({
+    type:'success', icon:icons[from], title:titles[from],
+    body:completionMsg(from), confetti:true,
+    buttons:[{label:nextLabels[from], cls:'mb-green', cb:()=>{
+      if(from===2) initQuiz();
+      if(from===3) buildIdCard();
+      showSlide(from+1);
+      if(from+1<4) setTimeout(()=>showIntro(from+1),350);
+    }}]
+  });
+}
+
+// ── COLOUR PICKER ──────────────────────────
+document.getElementById('favcolor').addEventListener('input',function(){
+  document.getElementById('colorVal').textContent=this.value.toUpperCase();
+});
+
+// ── PASSWORD STRENGTH ──────────────────────
+document.getElementById('pw').addEventListener('input',function(){
+  const v=this.value;
+  const map={'req-len':v.length>=8,'req-upper':/[A-Z]/.test(v),'req-num':/[0-9]/.test(v),'req-sym':/[^A-Za-z0-9]/.test(v)};
+  let score=Object.values(map).filter(Boolean).length;
+  Object.entries(map).forEach(([id,pass])=>{
+    const el=document.getElementById(id);
+    el.textContent=(pass?'✅':'⬜')+el.textContent.slice(2);
+  });
+  const sf=document.getElementById('sf'),sl=document.getElementById('sl');
+  const cols=['','#FF6B6B','#FFD166','#06d6a0','#64FFDA'];
+  const labs=['','Weak','Fair','Good','Strong'];
+  sf.style.width=score*25+'%'; sf.style.background=cols[score]||'';
+  sl.textContent=score?labs[score]:'Enter a password'; sl.style.color=cols[score]||'var(--secondary)';
+});
+
+function toggleEye(id){
+  const el=document.getElementById(id);
+  el.type=el.type==='password'?'text':'password';
+}
+
+// ── MATH QUIZ ──────────────────────────────
+let quizQuestions=[],quizIndex=0,quizScore=0,quizPassed=false;
+
+function genQ(){
+  const ops=['+','-','×'],op=ops[Math.floor(Math.random()*3)];
+  let a=Math.floor(Math.random()*20)+1,b=Math.floor(Math.random()*20)+1,ans;
+  if(op==='+') ans=a+b;
+  else if(op==='-'){if(b>a)[a,b]=[b,a];ans=a-b;}
+  else ans=a*b;
+  return{eq:`${a} ${op} ${b} = ?`,ans};
+}
+function genWrong(ans){
+  const w=new Set();
+  while(w.size<3){const d=Math.floor(Math.random()*10)-5,v=ans+d;if(v!==ans&&v>=0)w.add(v);}
+  return[...w];
+}
+function initQuiz(){
+  quizQuestions=Array.from({length:3},genQ);
+  quizIndex=0;quizScore=0;quizPassed=false;
+  document.getElementById('quizNextBtn').disabled=true;
+  document.getElementById('quizResult').style.display='none';
+  const pg=document.getElementById('quizProg');
+  pg.innerHTML=quizQuestions.map((_,i)=>`<div class="qp-dot" id="qd${i}"></div>`).join('');
+  renderQ();
+}
+function renderQ(){
+  const q=quizQuestions[quizIndex];
+  const opts=[q.ans,...genWrong(q.ans)].sort(()=>Math.random()-.5);
+  document.getElementById('quizEq').textContent=q.eq;
+  document.getElementById('quizFb').textContent='';
+  document.getElementById('quizScoreDisp').textContent=`Question ${quizIndex+1} of 3  |  Score: ${quizScore}`;
+  const ob=document.getElementById('quizOpts');ob.innerHTML='';
+  opts.forEach(o=>{
+    const b=document.createElement('button');b.className='quiz-btn';b.textContent=o;
+    b.onclick=()=>ansQ(o,q.ans,ob);ob.appendChild(b);
+  });
+}
+function ansQ(chosen,correct,ob){
+  const ok=chosen===correct;
+  if(ok)quizScore++;
+  [...ob.children].forEach(b=>{
+    if(+b.textContent===correct)b.classList.add('correct');
+    else if(+b.textContent===chosen&&!ok)b.classList.add('wrong');
+    b.disabled=true;
+  });
+  document.getElementById('quizFb').textContent=ok?'✅ Correct!':`❌ Incorrect. Answer: ${correct}`;
+  document.getElementById('quizFb').style.color=ok?'#06d6a0':'var(--danger)';
+  document.getElementById('qd'+quizIndex).classList.add(ok?'done-q':'wrong-q');
+  quizIndex++;
+  if(quizIndex<3)setTimeout(renderQ,900);else setTimeout(finishQuiz,900);
+}
+function finishQuiz(){
+  quizPassed=quizScore>=2;
+  document.getElementById('quizScoreDisp').textContent=`Final Score: ${quizScore}/3`;
+  const res=document.getElementById('quizResult');res.style.display='block';
+  if(quizPassed){
+    res.innerHTML=`<span style="color:var(--primary)">🎉 ${quizScore}/3 — Quiz passed!</span>`;
+    document.getElementById('quizNextBtn').disabled=false;
+    modal({type:'success',icon:'🧮',title:'Quiz Passed!',confetti:true,
+      body:`You answered <strong>${quizScore} out of 3</strong> questions correctly.<br><br>You can now complete your registration!`,
+      buttons:[{label:'Complete Registration →',cls:'mb-green',cb:null}]
+    });
+  } else {
+    res.innerHTML=`<span style="color:var(--danger)">😔 ${quizScore}/3 — Need at least 2. <a href="#" onclick="initQuiz();return false;" style="color:var(--primary)">Try again</a></span>`;
+    modal({type:'error',icon:'❌',title:'Quiz Failed',
+      body:`You scored <strong>${quizScore}/3</strong>. You need <strong>at least 2 correct</strong> to proceed.<br><br>Don't worry — click <em>Try Again</em> for fresh questions!`,
+      buttons:[
+        {label:'Try Again',cls:'mb-red',cb:initQuiz},
+        {label:'Dismiss',cls:'mb-ghost',cb:null}
+      ]
+    });
+  }
+}
+
+// ── ID CARD ────────────────────────────────
+function makeRegId(){return 'GCF-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase();}
+function buildIdCard(){
+  const name=document.getElementById('fullname').value.trim();
+  const email=document.getElementById('email').value.trim();
+  const dept=document.getElementById('dept').value;
+  const year=document.getElementById('year').value;
+  const roll=document.getElementById('roll').value.trim();
+  const color=document.getElementById('favcolor').value;
+  const skills=[...document.querySelectorAll('.skill-cb:checked')].map(c=>c.value);
+  document.getElementById('ic-name').textContent=name.toUpperCase();
+  document.getElementById('ic-dept').textContent=dept;
+  document.getElementById('ic-email').textContent=email;
+  document.getElementById('ic-year').textContent=year;
+  document.getElementById('ic-roll').textContent=roll;
+  document.getElementById('ic-score').textContent=quizScore+'/3';
+  document.getElementById('ic-skills').textContent=skills.join(', ');
+  document.getElementById('ic-color').innerHTML=`<span class="color-swatch" style="background:${color}"></span>${color.toUpperCase()}`;
+  document.getElementById('ic-regid').textContent=makeRegId();
+}
+
+// ── PRINT ──────────────────────────────────
+function printCard(){
+  const card=document.getElementById('idCard').outerHTML;
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    body{margin:0;background:#0A192F;display:flex;align-items:center;justify-content:center;min-height:100vh;}
+    :root{--bg:#0A192F;--surface:#112240;--primary:#64FFDA;--secondary:#8892B0;--text:#CCD6F6;--accent:#1F6FEB;}
+    #idCard{background:linear-gradient(145deg,#112240,#0d1f3c);border:1px solid rgba(100,255,218,.35);border-radius:16px;padding:2rem 2rem 1.6rem;width:340px;position:relative;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+    #idCard::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#1F6FEB,#64FFDA);}
+    #idCard::after{content:'GCF';position:absolute;bottom:1rem;right:1.5rem;font-family:'Orbitron',monospace;font-size:4rem;font-weight:800;color:rgba(100,255,218,.04);}
+    .id-logo{font-family:'Orbitron',monospace;font-size:.7rem;letter-spacing:.25em;color:#8892B0;margin-bottom:.5rem;}
+    .id-name{font-family:'Orbitron',monospace;font-size:1.25rem;font-weight:700;color:#64FFDA;margin-bottom:.25rem;}
+    .id-dept{font-size:.78rem;color:#1F6FEB;margin-bottom:1.4rem;}
+    .id-divider{height:1px;background:rgba(100,255,218,.12);margin:1rem 0;}
+    .id-row{display:flex;justify-content:space-between;font-size:.74rem;margin:.45rem 0;}
+    .id-row .k{color:#8892B0;}.id-row .v{color:#CCD6F6;font-family:'JetBrains Mono',monospace;font-size:.72rem;text-align:right;max-width:180px;line-height:1.4;}
+    .id-regid{margin-top:1.2rem;background:rgba(100,255,218,.07);border:1px solid rgba(100,255,218,.2);border-radius:8px;padding:.6rem 1rem;font-family:'JetBrains Mono',monospace;font-size:.75rem;color:#64FFDA;text-align:center;}
+    .color-swatch{display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:middle;margin-right:4px;border:1px solid rgba(255,255,255,.2);}
+  </style></head><body>${card}<script>window.onload=function(){window.print()}<\/script></body></html>`);
+  w.document.close();
+}
+
+// ── RESET ──────────────────────────────────
+function resetForm(){
+  document.querySelectorAll('input').forEach(i=>{
+    if(['text','email','number','password','tel','date'].includes(i.type))i.value='';
+    if(i.type==='checkbox')i.checked=false;
+    if(i.type==='color')i.value='#64FFDA';
+  });
+  document.querySelectorAll('select').forEach(s=>s.selectedIndex=0);
+  document.getElementById('colorVal').textContent='#64FFDA';
+  document.querySelectorAll('.has-error').forEach(e=>e.classList.remove('has-error'));
+  document.getElementById('sf').style.width='0';
+  document.getElementById('sl').textContent='Enter a password to check strength';
+  ['req-len','req-upper','req-num','req-sym'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.textContent='⬜'+el.textContent.slice(2);
+  });
+  initQuiz();
+  showSlide(0);
+  setTimeout(()=>showIntro(0),350);
+}
+
+// ── BOOT ───────────────────────────────────
+initQuiz();
+window.addEventListener('load',()=>showIntro(0));
+</script>
+</body>
+</html>
